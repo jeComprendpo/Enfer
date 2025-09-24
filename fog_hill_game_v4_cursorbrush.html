@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fog Hill Village — Version 4 (Cursor Brush)</title>
+  <title>Fog Hill Village — Version 12 (Image 1920x1080)</title>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@500;700&display=swap" rel="stylesheet">
   <style>
     :root{ --seal:#9c1e1e; --tile:72px; --shadow:rgba(0,0,0,.25); }
@@ -12,44 +12,43 @@
       font-family:"Noto Serif SC",serif;
       background:#f5f1e6;
       overflow:hidden;
-      /* Curseur pinceau global (tailles 32 et 48 en fallback) */
       cursor: url('Image/cursor_brush_32.png') 7 7, url('Image/cursor_brush_48.png') 11 10, auto;
     }
-    /* Forcer les éléments interactifs à hériter du curseur */
-    button, .menu-btn, .round-btn, .build-card, .buildings-layer, .grid-layer, .ghost, .world { cursor: inherit !important; }
-    /* Header minimal */
     .header{ position:fixed; top:0; left:0; right:0; height:44px; background:rgba(255,255,255,.9); border-bottom:2px solid var(--seal); display:flex; align-items:center; justify-content:space-between; padding:0 10px; z-index:40; }
     .round-btn{ width:36px; height:36px; border-radius:50%; border:2px solid var(--seal); background:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; }
     .round-btn:hover{ background:var(--seal); color:#fff; }
     .res-bar{ display:flex; align-items:center; gap:10px; }
     .res-chip{ background:rgba(255,255,255,.8); border:1px solid #00000025; border-radius:999px; padding:2px 8px; box-shadow:0 1px 3px var(--shadow); font-size:14px; }
-    /* Floating stats menu */
     .stats-menu{ position:absolute; top:50px; left:10px; background:rgba(255,255,255,.95); border:2px solid var(--seal); border-radius:8px; padding:10px; display:none; flex-direction:column; gap:6px; min-width:220px; z-index:60; }
     .stats-menu.open{ display:flex; }
     .stats-menu h4{ margin:4px 0; font-size:14px; }
-    /* World */
-    .game-wrap{ position:fixed; top:44px; bottom:60px; left:0; right:0; }
-    .world{ position:relative; width:100%; height:100%; background:url('Image/a.png') center/cover no-repeat; overflow:hidden; }
+    .game-wrap{ position:fixed; top:44px; bottom:60px; left:0; right:0; overflow:hidden; }
+    .world{ 
+      position:relative; 
+      width:100%; 
+      height:100%; 
+      background:url('Image/here.png') center/cover no-repeat; 
+      transform-origin: center center; 
+    }
     .grid-layer,.buildings-layer,.ghost{ position:absolute; inset:0; }
     .grid-layer.show{ background-image:linear-gradient(#00000015 1px,transparent 1px),linear-gradient(90deg,#00000015 1px,transparent 1px); background-size:var(--tile) var(--tile); }
-    .building{ position:absolute; width:var(--tile); height:var(--tile); filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+    .building{ position:absolute; width:var(--tile); height:var(--tile); filter:drop-shadow(0 2px 4px rgba(0,0,0,.3)); transition: outline .2s; }
+    .building:hover{ outline:2px solid rgba(255,0,0,0.6); }
     .building[data-type="pavillon"]{ background:url('Image/Maison.png') center/contain no-repeat }
     .building[data-type="riziere"]{ background:url('Image/Maison2.png') center/contain no-repeat }
     .building[data-type="the"]{ background:url('Image/Temple.png') center/contain no-repeat }
     .building[data-type="bambou"]{ background:url('Image/Boutique.png') center/contain no-repeat }
     .building[data-type="encens"]{ background:url('Image/forge.png') center/contain no-repeat }
     .building[data-type="autel"]{ background:url('Image/templePetit.png') center/contain no-repeat }
+    .building[data-type="chemin"]{ background:url('Image/chemin.png') center/contain no-repeat }
     .ghost{ pointer-events:none; border:2px dashed #000; background:rgba(0,0,0,.1); opacity:.7; width:var(--tile); height:var(--tile); }
-    /* Footer compact with category buttons */
     .footer{ position:fixed; bottom:0; left:0; right:0; height:60px; background:rgba(255,255,255,.9); border-top:2px solid var(--seal); display:flex; justify-content:center; align-items:center; gap:14px; z-index:50; }
     .menu-btn{ width:44px; height:44px; border-radius:50%; border:2px solid var(--seal); background:#fff; font-size:20px; display:flex; align-items:center; justify-content:center; }
     .menu-btn:hover{ background:var(--seal); color:#fff; }
-    /* Floating build menus */
     .build-menu{ position:absolute; bottom:70px; background:rgba(255,255,255,.95); border:2px solid var(--seal); border-radius:8px; padding:6px; display:none; gap:8px; }
     .build-menu.open{ display:flex; }
     .build-card{ border:1px solid #00000025; border-radius:6px; background:#fff; padding:6px; text-align:center; min-width:100px; font-size:12px; }
     .build-card:hover{ background:var(--seal); color:#fff; }
-    /* Toasts */
     .toast{ position:fixed; top:50px; right:10px; background:var(--seal); color:#fff; padding:6px 12px; border-radius:999px; box-shadow:0 2px 6px rgba(0,0,0,.3); animation:fadein .2s; z-index:80; }
     @keyframes fadein{ from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:translateY(0)} }
   </style>
@@ -83,26 +82,42 @@
   <button class="menu-btn" data-menu="menu1">🏠</button>
   <button class="menu-btn" data-menu="menu2">⚒</button>
   <button class="menu-btn" data-menu="menu3">🏛</button>
+  <button class="menu-btn" id="pathBtn">🛣</button>
+  <button class="menu-btn" id="destroyBtn">🗑</button>
 </footer>
-<!-- Floating build menus -->
+
+<!-- Menus de construction -->
 <div class="build-menu" id="menu1">
   <div class="build-card" data-type="pavillon">Pavillon<br><span class="meta">10 Bois</span></div>
   <div class="build-card" data-type="riziere">Rizière<br><span class="meta">5 Bois</span></div>
   <div class="build-card" data-type="the">Thé<br><span class="meta">5 Bois</span></div>
 </div>
 <div class="build-menu" id="menu2">
-  <div class="build-card" data-type="bambou">Bambou<br><span class="meta">0</span></div>
+  <div class="build-card" data-type="bambou">Bambou<br><span class="meta">3 Bois</span></div>
   <div class="build-card" data-type="encens">Encens<br><span class="meta">8 Bois</span></div>
 </div>
 <div class="build-menu" id="menu3">
-  <div class="build-card" data-type="autel">Autel<br><span class="meta">6 Bois,5 Thé</span></div>
+  <div class="build-card" data-type="autel">Autel<br><span class="meta">6 Bois, 5 Thé</span></div>
 </div>
+
 <script>
 // ===== État du jeu =====
 const resources={bois:50,riz:20,the:10,encens:5,croyance:15,villagers:5};
 const harmony={feu:50,eau:50,bois:50,metal:50,terre:50};
 let corruption=0, day=1, seasonIndex=0; const seasons=['Printemps','Été','Automne','Hiver'];
 const villagers=Array.from({length:resources.villagers},(_,i)=>{const elems=['feu','eau','bois','metal','terre'];return {id:i+1,name:'Disciple '+(i+1),elem:elems[Math.floor(Math.random()*elems.length)],sanity:100,assigned:null};});
+
+// ===== Coûts des bâtiments =====
+const buildingCosts={
+  pavillon:{bois:10},
+  riziere:{bois:5},
+  the:{bois:5},
+  bambou:{bois:3},
+  encens:{bois:8},
+  autel:{bois:6,the:5},
+  chemin:{bois:1}
+};
+
 // ===== UI =====
 function refreshUI(){
   document.getElementById('r-bois').textContent=resources.bois;
@@ -111,30 +126,126 @@ function refreshUI(){
   document.getElementById('r-encens').textContent=resources.encens;
   document.getElementById('r-croyance').textContent=resources.croyance;
   document.getElementById('r-villagers').textContent=resources.villagers;
-  document.getElementById('elemList').innerHTML=Object.entries(harmony).map(function(p){return p[0]+': '+Math.round(p[1]);}).join('<br>');
+  document.getElementById('elemList').innerHTML=Object.entries(harmony).map(p=>p[0]+': '+Math.round(p[1])).join('<br>');
   document.getElementById('corrInfo').textContent=Math.round(corruption)+'%';
   document.getElementById('seasonInfo').textContent=seasons[seasonIndex]+', Jour '+day;
-  document.getElementById('villagerList').innerHTML=villagers.map(function(v){return '<li>'+v.name+' — <i>'+v.elem+'</i> — Sanité: '+Math.round(v.sanity)+' '+(v.assigned?('→ '+v.assigned.type):'')+'</li>';}).join('');
+  document.getElementById('villagerList').innerHTML=villagers.map(v=>'<li>'+v.name+' — <i>'+v.elem+'</i> — Sanité: '+Math.round(v.sanity)+(v.assigned?('→ '+v.assigned.type):'')+'</li>').join('');
 }
 refreshUI();
-// menu stats
-document.getElementById('statBtn').addEventListener('click',function(){document.getElementById('statsMenu').classList.toggle('open');});
-// Toast
-function toast(msg){var el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);setTimeout(function(){el.remove();},2000);}
+document.getElementById('statBtn').addEventListener('click',()=>{document.getElementById('statsMenu').classList.toggle('open');});
+function toast(msg){var el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2000);}
+
 // ===== Placement =====
-const TILE=72; const world=document.getElementById('world'); const layer=document.getElementById('layer'); const ghost=document.getElementById('ghost'); let selectedType=null;
-document.querySelectorAll('.menu-btn').forEach(function(btn){btn.addEventListener('click',function(){const id=btn.dataset.menu;document.querySelectorAll('.build-menu').forEach(function(m){m.classList.remove('open');});const menu=document.getElementById(id);menu.classList.toggle('open');menu.style.left=btn.getBoundingClientRect().left+'px';});});
-document.querySelectorAll('.build-card').forEach(function(card){card.addEventListener('click',function(){selectedType=card.dataset.type;ghost.style.display='block';toast(selectedType+' sélectionné');document.querySelectorAll('.build-menu').forEach(function(m){m.classList.remove('open');});});});
-world.addEventListener('contextmenu',function(e){e.preventDefault();selectedType=null;ghost.style.display='none';});
-world.addEventListener('mousemove',function(e){if(!selectedType) return;const rect=world.getBoundingClientRect();const x=e.clientX-rect.left;const y=e.clientY-rect.top;ghost.style.left=Math.floor(x/TILE)*TILE+'px';ghost.style.top=Math.floor(y/TILE)*TILE+'px';});
-world.addEventListener('click',function(e){if(!selectedType) return;const el=document.createElement('div');el.className='building';el.dataset.type=selectedType;el.style.left=ghost.style.left;el.style.top=ghost.style.top;layer.appendChild(el);selectedType=null;ghost.style.display='none';toast('Bâtiment placé');});
+const TILE=72; const world=document.getElementById('world'); const layer=document.getElementById('layer'); const ghost=document.getElementById('ghost'); 
+let selectedType=null; let destroyMode=false;
+
+function positionGhost(e){
+  const rect=world.getBoundingClientRect();
+  const x=e.clientX-rect.left;
+  const y=e.clientY-rect.top;
+  ghost.style.left=Math.floor(x/TILE)*TILE+'px';
+  ghost.style.top=Math.floor(y/TILE)*TILE+'px';
+}
+
+document.querySelectorAll('.menu-btn[data-menu]').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const id=btn.dataset.menu;
+    document.querySelectorAll('.build-menu').forEach(m=>m.classList.remove('open'));
+    const menu=document.getElementById(id);
+    menu.classList.toggle('open');
+    menu.style.left=btn.getBoundingClientRect().left+'px';
+  });
+});
+
+document.querySelectorAll('.build-card').forEach(card=>{
+  card.addEventListener('click',(e)=>{
+    selectedType=card.dataset.type;
+    destroyMode=false;
+    ghost.style.display='block';
+    toast(selectedType+' sélectionné');
+    document.querySelectorAll('.build-menu').forEach(m=>m.classList.remove('open'));
+    positionGhost(e);
+  });
+});
+
+world.addEventListener('contextmenu',e=>{e.preventDefault();selectedType=null;destroyMode=false;ghost.style.display='none';});
+world.addEventListener('mousemove',e=>{if(selectedType){positionGhost(e);}});
+world.addEventListener('click',e=>{
+  if(destroyMode){
+    if(e.target.classList.contains('building')){e.target.remove();toast('Élément détruit');}
+    return;
+  }
+  if(!selectedType) return;
+
+  const cost=buildingCosts[selectedType]||{};
+  for(let res in cost){
+    if(resources[res]===undefined || resources[res]<cost[res]){
+      toast("Pas assez de "+res+" !");
+      return;
+    }
+  }
+  for(let res in cost){resources[res]-=cost[res];}
+
+  const el=document.createElement('div');
+  el.className='building';el.dataset.type=selectedType;
+  el.style.left=ghost.style.left;el.style.top=ghost.style.top;
+  layer.appendChild(el);
+  selectedType=null;ghost.style.display='none';
+  toast('Bâtiment placé');
+  refreshUI();
+});
+
+// ===== Boutons spéciaux =====
+document.getElementById('pathBtn').addEventListener('click',e=>{selectedType="chemin"; destroyMode=false; ghost.style.display="block"; toast("Chemin sélectionné"); positionGhost(e);});
+document.getElementById('destroyBtn').addEventListener('click',()=>{destroyMode=!destroyMode; selectedType=null; ghost.style.display="none"; toast(destroyMode? "Mode destruction activé" : "Mode destruction désactivé");});
+
+// ===== Zoom & Drag avec limites =====
+let zoom=1, offsetX=0, offsetY=0, isDragging=false, dragStartX=0, dragStartY=0;
+function updateTransform(){
+  world.style.transform=`translate(${offsetX}px,${offsetY}px) scale(${zoom})`;
+}
+world.addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(e.deltaY<0){ zoom=Math.min(zoom+0.1,2); }
+  else{ zoom=Math.max(zoom-0.1,1); }
+  updateTransform();
+});
+world.addEventListener('mousedown',e=>{if(e.button===1||e.button===0){isDragging=true;dragStartX=e.clientX-offsetX;dragStartY=e.clientY-offsetY;}});
+window.addEventListener('mousemove',e=>{
+  if(isDragging){
+    offsetX=e.clientX-dragStartX;
+    offsetY=e.clientY-dragStartY;
+
+    const container=world.parentElement.getBoundingClientRect();
+    const scaledWidth=container.width*zoom;
+    const scaledHeight=container.height*zoom;
+    const maxOffsetX=(scaledWidth-container.width)/2;
+    const maxOffsetY=(scaledHeight-container.height)/2;
+
+    offsetX=Math.min(Math.max(offsetX,-maxOffsetX),maxOffsetX);
+    offsetY=Math.min(Math.max(offsetY,-maxOffsetY),maxOffsetY);
+
+    updateTransform();
+  }
+});
+window.addEventListener('mouseup',()=>{isDragging=false;});
+
 // ===== Corruption & Saisons =====
 function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
-function avgOffBalance(){const vals=Object.values(harmony).map(function(v){return Math.abs(50-v);});return vals.reduce(function(a,b){return a+b;},0)/vals.length;}
+function avgOffBalance(){return Object.values(harmony).map(v=>Math.abs(50-v)).reduce((a,b)=>a+b,0)/Object.values(harmony).length;}
 function nextDay(){day++;if(day%10===0){seasonIndex=(seasonIndex+1)%seasons.length;toast('Nouvelle saison: '+seasons[seasonIndex]);}}
-setInterval(function(){corruption=clamp(corruption+avgOffBalance()*0.02,0,100);nextDay();refreshUI();},4000);
-// ===== Rituel (touche R) =====
-document.addEventListener('keydown',function(e){if(e.key==='r'){if(resources.encens>=2&&resources.croyance>=3){resources.encens-=2;resources.croyance-=3;corruption=clamp(corruption-10,0,100);toast('Rituel accompli');refreshUI();}else{toast("Pas assez de ressources pour le rituel");}}});
+setInterval(()=>{corruption=clamp(corruption+avgOffBalance()*0.02,0,100);nextDay();refreshUI();},4000);
+
+// ===== Rituel =====
+document.addEventListener('keydown',e=>{
+  if(e.key==='r'){
+    if(resources.encens>=2&&resources.croyance>=3){
+      resources.encens-=2;resources.croyance-=3;
+      corruption=clamp(corruption-10,0,100);
+      toast('Rituel accompli');refreshUI();
+    }else{toast("Pas assez de ressources pour le rituel");}
+  }
+});
 </script>
 </body>
 </html>

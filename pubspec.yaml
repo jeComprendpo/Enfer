@@ -1,0 +1,25 @@
+name: enfer
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/Image/here.png
+    - assets/Image/Maison.png
+    - assets/Image/Maison2.png
+    - assets/Image/Temple.png
+    - assets/Image/Boutique.png
+    - assets/Image/forge.png
+    - assets/Image/templePetit.png
+    - assets/Image/cheminL.png
